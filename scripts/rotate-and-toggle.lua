@@ -5,39 +5,45 @@ local Event = require('lib/event')
 local Position = require('lib/position')
 
 local function RotateUnderground(old_pipe, player, reverse)
-    local new_name = reverse and advancedPiping.getReverseRotatedPipe[old_pipe.name] or advancedPiping.getRotatedPipe[old_pipe.name]
+    local is_ghost = old_pipe.type == 'entity-ghost'
+    local old_name = is_ghost and old_pipe.ghost_name or old_pipe.name
+    local new_name = reverse and advancedPiping.getReverseRotatedPipe[old_name] or advancedPiping.getRotatedPipe[old_name]
     if not new_name then
         return
     end
-    local old_entity_unit_number = old_pipe.unit_number
-    local old_pipeFluid = old_pipe.fluidbox[1]
-    local event_data = {
-        entity = old_pipe,
-        player_index = player.index,
-    }
-    script.raise_event(defines.events.script_raised_destroy, event_data)
-    local new_pipe =
-        old_pipe.surface.create_entity {
-        name = new_name,
-        position = old_pipe.position,
-        direction = old_pipe.direction,
-        force = old_pipe.force,
-        fast_replace = true,
-        create_build_effect_smoke = false,
-        spill = false
-    }
-    --new_pipe.fluidbox[1] = old_pipeFluid
-    new_pipe.last_user = player
-    local event = {
-        entity = new_pipe,
-        created_entity = new_pipe,
-        player_index = player.index,
-        clamped = true,
-        replaced_entity_unit_number = old_entity_unit_number
-    }
-    script.raise_event(defines.events.script_raised_built, event)
-    if old_pipe then
-        old_pipe.destroy()
+    local position = old_pipe.position
+    local direction = old_pipe.direction
+    local force = old_pipe.force
+    local surface = old_pipe.surface
+    -- Save the contents of the old pipe before destroying it and restore it after creating the new pipe.
+    -- This prevents losing fluids when recreating the pipe when the pipe network is full.
+    local contents = {}
+    for i = 1, old_pipe.fluids_count do
+        contents[i] = old_pipe.get_fluid(i)
+    end
+    old_pipe.destroy {
+            raise_destroy = true,
+            player = player
+        }
+
+    local new_pipe = surface.create_entity {
+            name = is_ghost and 'entity-ghost' or new_name,
+            inner_name = is_ghost and new_name or nil,
+            position = position,
+            direction = direction,
+            force = force,
+            fast_replace = true,
+            create_build_effect_smoke = not is_ghost,
+            spill = false,
+            player = player,
+            raise_built = true
+        }
+    if new_pipe and new_pipe.valid then
+        for i = 1, #contents do
+            if contents[i] then
+                new_pipe.set_fluid(i, contents[i])
+            end
+        end
     end
 end
 
