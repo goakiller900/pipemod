@@ -33,7 +33,7 @@ local function RotateUnderground(old_pipe, player, reverse)
             direction = direction,
             force = force,
             fast_replace = true,
-            create_build_effect_smoke = not is_ghost,
+            create_build_effect_smoke = false,
             spill = false,
             player = player,
             raise_built = true
