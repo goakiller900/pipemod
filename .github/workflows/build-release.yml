@@ -34,7 +34,7 @@ jobs:
           import json
           from pathlib import Path
 
-          info = json.loads(Path("info.json").read_text(encoding="utf-8"))
+          info = json.loads(Path("info.json").read_text(encoding="utf-8-sig"))
           name = info["name"]
           version = info["version"]
           archive = f"{name}_{version}.zip"
@@ -46,7 +46,7 @@ jobs:
           PY
 
       - name: Validate and build AFHC
-        run: python scripts/build_release.py
+        run: python scripts/build_afhc.py
 
       - name: Verify Factorio archive
         shell: bash
@@ -70,7 +70,7 @@ jobs:
           mod_name = os.environ["MOD_NAME"]
           version = os.environ["VERSION"]
           expected_root = f"{mod_name}_{version}"
-          legacy_namespace = "__underground-pipe-pack__/"
+          legacy_namespace = b"__underground-pipe-pack__/"
 
           with zipfile.ZipFile(archive_path) as archive:
               names = archive.namelist()
@@ -84,10 +84,7 @@ jobs:
 
               stale = []
               for name in names:
-                  if PurePosixPath(name).suffix.lower() not in {".lua", ".cfg", ".json", ".md", ".txt", ".yml", ".yaml"}:
-                      continue
-                  text = archive.read(name).decode("utf-8", errors="replace")
-                  if legacy_namespace in text:
+                  if legacy_namespace in archive.read(name):
                       stale.append(name)
 
               if stale:
