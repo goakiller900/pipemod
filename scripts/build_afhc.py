@@ -17,7 +17,7 @@ MOD_NAME = "advanced-fluid-handling-continued"
 LEGACY_NAMESPACE = b"__underground-pipe-pack__/"
 CURRENT_NAMESPACE = b"__advanced-fluid-handling-continued__/"
 
-EXCLUDED_TOP_LEVEL = {".git", ".github", "dist"}
+EXCLUDED_TOP_LEVEL = {".git", ".github", "dist", "images"}
 EXCLUDED_NAMES = {".DS_Store", "__MACOSX", "__pycache__"}
 EXCLUDED_FILES = {
     ".gitignore",
