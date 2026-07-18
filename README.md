@@ -1,10 +1,15 @@
-# Advanced Fluid Handling — Factorio 2.1 compatibility work
+# Advanced Fluid Handling Continued (AFHC)
 
-This repository is a fork of **Advanced Fluid Handling** (`underground-pipe-pack`), originally created and maintained by **TheStaplergun**.
+**Advanced Fluid Handling Continued** is a Factorio 2.1 continuation of **Advanced Fluid Handling**, originally created by **TheStaplergun**.
 
-The `2.1-update` branch is an unofficial technical compatibility update for Factorio 2.1 and Space Age. It is not a redesign, rebrand, or claim of ownership. The update aims to preserve the original gameplay, graphics, progression, balance, internal mod name, prototype names, recipes, technologies, controls, and remote interface as closely as practical.
+This repository carries the Factorio 2.1 and Space Age compatibility work forward under a new standalone mod identity:
 
-Upstream repository: `https://github.com/TheStaplergun/pipemod`
+- Title: `Advanced Fluid Handling Continued`
+- Internal mod name: `advanced-fluid-handling-continued`
+- Short name: `AFHC`
+- Target: Factorio `2.1`
+
+Upstream/original repository: `https://github.com/TheStaplergun/pipemod`
 
 ## What the mod adds
 
@@ -15,80 +20,78 @@ Upstream repository: `https://github.com/TheStaplergun/pipemod`
 - `Ctrl + R` and `Ctrl + Shift + R` controls for underground-port rotation.
 - Numpad `+` and `-` controls for adjusting valve thresholds.
 
-## Factorio 2.1 compatibility work
+## Factorio 2.1 continuation
 
-The compatibility branch:
+The AFHC version includes the existing 2.1 compatibility work from this fork:
 
-- updates `info.json` to Factorio 2.1 while keeping the internal name `underground-pipe-pack`;
-- removes obsolete or invalid prototype fields;
-- uses the Factorio 2.1 pipe-connection and valve schemas;
-- makes tier upgrade chains deterministic;
-- preserves fluids, quality, health, last-user information, and ghost tags during scripted replacements;
-- retains the existing remote interface and does not add polling or per-tick entity scans;
-- builds deterministic Factorio-ready ZIP files with SHA-256 checksums.
+- Factorio 2.1 prototype compatibility.
+- Optional Space Age 2.1 support.
+- Updated pipe-connection and valve definitions.
+- Deterministic tier upgrade chains.
+- Fluid, quality, health, last-user and ghost-tag preservation during scripted replacements.
+- Existing gameplay prototype names retained for save compatibility.
+- Deterministic Factorio-ready ZIP builds with SHA-256 checksums.
 
-The older Space Exploration-specific valve entities were incomplete: the entity prototypes existed conditionally, but matching items and recipes did not. The 2.1 branch therefore keeps the normal valves available with optional mods enabled and does not generate those incomplete special valve prototypes. Legacy locale strings and compatibility table entries remain for compatibility.
+AFHC uses its own internal mod identity but intentionally keeps the established item, recipe, technology and entity prototype names. Because those prototype names overlap with the original `underground-pipe-pack`, AFHC declares the original mod as incompatible so both cannot be enabled at the same time.
 
-## Compatibility identity
+The runtime remote interface uses `script.mod_name`, so under AFHC it is automatically registered as:
 
-The Mod Portal identifier comes from the unchanged `info.json` name:
+`advanced-fluid-handling-continued`
 
-`underground-pipe-pack`
+## Building the Factorio mod
 
-The Factorio release archive must therefore be named:
-
-`underground-pipe-pack_<version>.zip`
-
-and contain exactly one root folder:
-
-`underground-pipe-pack_<version>/`
-
-Keeping the internal name and prototype names unchanged is intended to preserve existing saves and integrations. Test builds should still be backed up and tested on copies of important saves.
-
-## Testing status
-
-GitHub source validation and a successful archive build only prove that the repository and ZIP passed the automated checks. They do **not** prove that the mod works in Factorio.
-
-Before a stable release, test at least:
-
-- clean Factorio 2.1 base game;
-- Factorio 2.1 with Space Age enabled;
-- fresh game and an existing 2.0.6 save upgrade;
-- all three technology tiers and their recipes;
-- placement, rotation, reverse rotation, mining, blueprint ghosts, robot construction, and upgrade-planner chains;
-- underground pumps and circuit connections;
-- adjustable valves at every threshold, including fluid preservation;
-- `no-pipe-touching`, Dectorio, Bob's Logistics, and any available Space Exploration configuration;
-- English, Russian, and other translated locale strings.
-
-See `changelog.txt` for the exact compatibility changes and unresolved test items.
-
-## Building a test archive
+Run:
 
 ```bash
 python scripts/build_release.py
 ```
 
-The builder validates metadata, changelog versioning, Lua module references, hard-coded self-asset paths, known removed fields, archive structure, and integrity. It writes the ZIP and checksum to `dist/`.
+The finished files are written to `dist/`:
 
-## Release workflow
+```text
+advanced-fluid-handling-continued_2.1.0.zip
+advanced-fluid-handling-continued_2.1.0.zip.sha256
+```
 
-- Pull requests validate and upload temporary workflow artifacts.
-- Pushes to non-default branches create or replace branch-specific prereleases for testing.
-- Stable GitHub releases are only created from `master` and are treated as immutable.
-- Factorio Mod Portal publication is manual, restricted to `master`, and requires a repository secret named `FACTORIO_API_KEY`.
-- An already-published version must never be replaced with different contents; increase the version instead.
+The release builder:
+
+- validates `info.json` and the Factorio 2.1 target;
+- checks required files and Lua `require()` paths;
+- rejects known obsolete Factorio prototype fields;
+- rewrites legacy `__underground-pipe-pack__/...` self-asset paths to `__advanced-fluid-handling-continued__/...` inside the release archive;
+- validates referenced self-assets;
+- verifies that the finished ZIP contains no stale legacy self-asset namespaces;
+- creates one correctly named mod root folder inside the ZIP;
+- generates a SHA-256 checksum.
+
+This packaging-time namespace migration lets the inherited source tree keep its historical layout while producing an AFHC package that resolves graphics and other self-assets through the new mod identity.
+
+## GitHub Actions
+
+The workflow in `.github/workflows/build-release.yml` validates and builds the mod on pushes, pull requests and manual runs. The resulting Factorio ZIP and checksum are uploaded as GitHub Actions artifacts and can be placed directly in the Factorio `mods` directory for testing.
+
+## Testing checklist
+
+A successful build proves that the mod structure and package passed automated checks; it does not replace in-game testing. Before calling a version stable, test at least:
+
+- clean Factorio 2.1 base game;
+- Factorio 2.1 with Space Age enabled;
+- fresh games and upgraded saves;
+- all three technology tiers and recipes;
+- placement, mining and rotation in both directions;
+- blueprint ghosts, robot construction and upgrade-planner chains;
+- underground pumps and circuit connections;
+- adjustable valves and fluid preservation;
+- optional compatibility combinations used by your mod pack.
 
 ## Credits
 
-- Original creator and maintainer: **TheStaplergun**.
+- Original Advanced Fluid Handling creator and maintainer: **TheStaplergun**.
 - Previous fixes and translations: the contributors recorded in the upstream Git history.
-- Factorio 2.1 compatibility work in this fork: **goakiller900**, with review and testing assistance.
-
-If the original maintainer wants this compatibility work redirected upstream, archived, or otherwise handled differently, the fork maintainer should follow that request where legally and technically possible.
+- Factorio 2.1 continuation and AFHC packaging work: **goakiller900**, with testing and development assistance.
 
 ## Licence
 
-The original `LICENSE.txt` is retained unchanged: **Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International**.
+The original `LICENSE.txt` is retained unchanged. It is **Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International**.
 
-That licence can restrict distribution of modified builds. A public modified release or Mod Portal upload should only occur with the permissions required by the licence and the original author. The presence of build and publication tooling does not itself grant permission to distribute an adapted version.
+That licence may restrict public distribution of modified versions. Building and testing AFHC does not itself grant permission to publish the modified package publicly; obtain any permission required from the original rights holder before a public Mod Portal release.
