@@ -1,16 +1,18 @@
-name: Build Advanced Fluid Handling Continued
+name: Build and release Advanced Fluid Handling Continued
 
 on:
   push:
+    branches:
+      - master
   pull_request:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
-  group: afhc-build-${{ github.ref }}
-  cancel-in-progress: true
+  group: afhc-release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -38,14 +40,16 @@ jobs:
           name = info["name"]
           version = info["version"]
           archive = f"{name}_{version}.zip"
+          tag = f"afhc-v{version}"
 
           print(f"name={name}")
           print(f"version={version}")
           print(f"archive={archive}")
           print(f"checksum={archive}.sha256")
+          print(f"tag={tag}")
           PY
 
-      - name: Validate and build AFHC
+      - name: Build AFHC
         run: python scripts/build_afhc.py
 
       - name: Verify Factorio archive
@@ -59,7 +63,6 @@ jobs:
 
           test -f "$ARCHIVE"
           unzip -t "$ARCHIVE"
-          unzip -l "$ARCHIVE"
 
           python - <<'PY'
           import os
@@ -91,7 +94,7 @@ jobs:
                   raise SystemExit("Legacy mod namespace remains in: " + ", ".join(stale))
           PY
 
-      - name: Upload Factorio-ready build
+      - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.metadata.outputs.name }}_${{ steps.metadata.outputs.version }}_${{ github.sha }}
@@ -101,3 +104,27 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
+
+      - name: Create GitHub Release
+        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.metadata.outputs.tag }}
+          VERSION: ${{ steps.metadata.outputs.version }}
+          ARCHIVE: dist/${{ steps.metadata.outputs.archive }}
+          CHECKSUM: dist/${{ steps.metadata.outputs.checksum }}
+        run: |
+          set -euo pipefail
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::error title=Version already released::Release $TAG already exists. Increase the version in info.json before creating another release."
+            exit 1
+          fi
+
+          gh release create "$TAG" \
+            "$ARCHIVE" \
+            "$CHECKSUM" \
+            --target "$GITHUB_SHA" \
+            --title "Advanced Fluid Handling Continued version $VERSION" \
+            --notes "Automated Factorio 2.1 release for Advanced Fluid Handling Continued version $VERSION. The attached ZIP is ready to place in the Factorio mods folder."
